@@ -193,11 +193,23 @@ describe('JSON5', () => {
                 err => (
                     err instanceof SyntaxError &&
                     /^JSON5: invalid character '\\n'/.test(err.message) &&
-                    err.lineNumber === 2 &&
-                    err.columnNumber === 0
+                    err.lineNumber === 1 &&
+                    err.columnNumber === 1
                 ))
             })
 
+	    it('throws on invalid \\r in strings', () => {
+                assert.throws(() => {
+                    JSON5.parse('"\r"')
+                },
+                err => (
+                    err instanceof SyntaxError &&
+                    /^JSON5: invalid character '\\r'/.test(err.message) &&
+                    err.lineNumber === 1 &&
+                    err.columnNumber === 1
+                ))
+            })
+	    
             it('throws on unterminated strings', () => {
                 assert.throws(() => {
                     JSON5.parse('"')
@@ -206,7 +218,7 @@ describe('JSON5', () => {
                     err instanceof SyntaxError &&
                     /^JSON5: invalid end of input/.test(err.message) &&
                     err.lineNumber === 1 &&
-                    err.columnNumber === 2
+                    err.columnNumber === 1
                 ))
             })
 
@@ -278,19 +290,19 @@ describe('JSON5', () => {
                     err instanceof SyntaxError &&
                     /^JSON5: invalid end of input/.test(err.message) &&
                     err.lineNumber === 1 &&
-                    err.columnNumber === 3
+                    err.columnNumber === 1
                 ))
             })
 
             it('throws on invalid first digits in hexadecimal escapes', () => {
                 assert.throws(() => {
-                    JSON5.parse('"\\xg"')
+                    JSON5.parse('"\\xg0"')
                 },
                 err => (
                     err instanceof SyntaxError &&
-                    /^JSON5: invalid character 'g'/.test(err.message) &&
+                    /^JSON5: invalid sequence '\\xg0'/.test(err.message) &&
                     err.lineNumber === 1 &&
-                    err.columnNumber === 4
+                    err.columnNumber === 1
                 ))
             })
 
@@ -300,9 +312,33 @@ describe('JSON5', () => {
                 },
                 err => (
                     err instanceof SyntaxError &&
-                    /^JSON5: invalid character 'g'/.test(err.message) &&
+                    /^JSON5: invalid sequence '\\x0g'/.test(err.message) &&
                     err.lineNumber === 1 &&
-                    err.columnNumber === 5
+                    err.columnNumber === 1
+                ))
+            })
+
+            it('throws on missing a digit in hexadecimal escapes', () => {
+                assert.throws(() => {
+                    JSON5.parse('"\\xg"')
+                },
+                err => (
+                    err instanceof SyntaxError &&
+                    /^JSON5: invalid sequence '\\x'/.test(err.message) &&
+                    err.lineNumber === 1 &&
+                    err.columnNumber === 1
+                ))
+            })
+
+	    it('throws on missing both digits in hexadecimal escapes', () => {
+                assert.throws(() => {
+                    JSON5.parse('"\\xg"')
+                },
+                err => (
+                    err instanceof SyntaxError &&
+                    /^JSON5: invalid sequence '\\x'/.test(err.message) &&
+                    err.lineNumber === 1 &&
+                    err.columnNumber === 1
                 ))
             })
 
@@ -312,9 +348,9 @@ describe('JSON5', () => {
                 },
                 err => (
                     err instanceof SyntaxError &&
-                    /^JSON5: invalid character 'g'/.test(err.message) &&
+                    /^JSON5: invalid sequence '\\u000g'/.test(err.message) &&
                     err.lineNumber === 1 &&
-                    err.columnNumber === 7
+                    err.columnNumber === 1
                 ))
             })
 
@@ -325,9 +361,7 @@ describe('JSON5', () => {
                     },
                     err => (
                         err instanceof SyntaxError &&
-                        /^JSON5: invalid character '\d'/.test(err.message) &&
-                        err.lineNumber === 1 &&
-                        err.columnNumber === 3
+                        /^JSON5: invalid sequence '\\\d'/.test(err.message)
                     ))
                 }
             })
@@ -338,9 +372,9 @@ describe('JSON5', () => {
                 },
                 err => (
                     err instanceof SyntaxError &&
-                    /^JSON5: invalid character '1'/.test(err.message) &&
+                    /^JSON5: invalid sequence '\\01'/.test(err.message) &&
                     err.lineNumber === 1 &&
-                    err.columnNumber === 4
+                    err.columnNumber === 1
                 ))
             })
 
@@ -437,6 +471,18 @@ describe('JSON5', () => {
                     /^JSON5: invalid end of input/.test(err.message) &&
                     err.lineNumber === 1 &&
                     err.columnNumber === 3
+                ))
+            })
+
+	    it('throws on invalid unicode key', () => {
+                assert.throws(() => {
+                    JSON5.parse('{\\u00g0 : "a"}')
+                },
+                err => (
+                    err instanceof SyntaxError &&
+                    /^JSON5: invalid character 'g'/.test(err.message) &&
+                    err.lineNumber === 1 &&
+                    err.columnNumber === 6
                 ))
             })
         })
